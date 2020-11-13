@@ -16,7 +16,7 @@ $(BIN)/%.o: %.c
 	$(CC) $(FLAGS) -c $< -o $@ -I"$(SRC)"
 
 clean:
-	rm $(TARGET)
 	rm $(BIN)/*.o
+	rm $(TARGET)
 
 .PHONY: clean
