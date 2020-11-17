@@ -1,38 +1,55 @@
 #ifndef GBCPU_H
 #define GBCPU_H
 
+#include <stdint.h>
+
+#define ZERO_FLAG 0x80
+#define NEG_FLAG 0x40
+#define HALFCARRY_FLAG 0x20
+#define CARRY_FLAG 0x10
+
 static struct
 {
-	union
+	// Registers
+	struct
 	{
-		unsigned short AF;
-		struct { unsigned char F, A; }
-	};
 
-	union
-	{
-		unsigned short BC;
-		struct { unsigned char C, B; }
-	};
+		uint8_t A, F;
 
-	union
-	{
-		unsigned short DE;
-		struct { unsigned char E, D; }
-	};
+		union
+		{
+			uint16_t BC;
+			struct { uint8_t C, B; }
+		};
 
-	union
-	{
-		unsigned short HL;
-		struct { unsigned char L, H; }
-	};
+		union
+		{
+			uint16_t DE;
+			struct { uint8_t E, D; }
+		};
 
-	unsigned short SP;
-	unsigned short PC;
+		union
+		{
+			uint16_t HL;
+			struct { uint8_t L, H; }
+		};
 
-} reg;
+		uint16_t SP;
+		uint16_t PC;
 
-static unsigned char* cpuRam;
+	} reg;
+
+	// Memory
+	uint8_t bootRom[0x100];
+	uint8_t vram[0x2000];
+	uint8_t ram[0x2000];
+
+
+} cpu;
+
+uint8_t rdMem (uint16_t address);
+void wrMem (uint16_t address, uint8_t value);
+
 void init ();
 void executeNextOp ();
 
