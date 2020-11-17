@@ -7,6 +7,7 @@
 #define NEG_FLAG 0x40
 #define HALFCARRY_FLAG 0x20
 #define CARRY_FLAG 0x10
+#define ALL_FLAGS 0xF0
 
 static struct
 {
