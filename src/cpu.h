@@ -9,49 +9,37 @@
 #define CARRY_FLAG 0x10
 #define ALL_FLAGS 0xF0
 
-static struct
-{
+static struct {
 	// Registers
-	struct
-	{
-
+	struct {
 		uint8_t A, F;
-
-		union
-		{
+		union {
 			uint16_t BC;
-			struct { uint8_t C, B; }
+			struct { uint8_t C, B; };
 		};
-
-		union
-		{
+		union {
 			uint16_t DE;
-			struct { uint8_t E, D; }
+			struct { uint8_t E, D; };
 		};
-
-		union
-		{
+		union {
 			uint16_t HL;
-			struct { uint8_t L, H; }
+			struct { uint8_t L, H; };
 		};
-
 		uint16_t SP;
 		uint16_t PC;
 
 	} reg;
 
 	// Memory
-	uint8_t bootRom[0x100];
-	uint8_t vram[0x2000];
-	uint8_t ram[0x2000];
+	uint8_t mem[0x10000];
 
 
 } cpu;
 
-uint8_t rdMem (uint16_t address);
-void wrMem (uint16_t address, uint8_t value);
+uint8_t rdMem(uint16_t address);
+void wrMem(uint16_t address, uint8_t value);
 
-void init ();
-void executeNextOp ();
+void init();
+void executeNextOp();
 
 #endif
