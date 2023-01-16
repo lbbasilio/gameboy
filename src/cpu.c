@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <stdio.h>
 #include "cpu.h"
+#include "Cup/vector/vector.h"
 
 #define CPU_FREQ 4194304
 
@@ -16,7 +17,9 @@ void loadRom(char* path) {
 	fclose(f);
 }
 
+vector_t* vec;
 int main() {
+	vec = vector_alloc(1, 128);
 	init();
 	//loadRom("C:\\Users\\luca\\Downloads\\PokeAka.gb");
 	//loadRom("C:\\Users\\luca\\Downloads\\Tetris.gb");
@@ -55,6 +58,7 @@ void executeNextOp () {
 	uint8_t opcode = rdMem(cpu.reg.PC);
 	uint8_t immByte = rdMem(cpu.reg.PC + 1);
 	uint16_t immWord = (rdMem(cpu.reg.PC + 2) << 8) | immByte; 
+	
 
 	uint8_t memVal;
 	uint32_t cycles;
@@ -117,9 +121,9 @@ void executeNextOp () {
 				   break;
 
 		case 0xCD: cpu.reg.PC += 3;
-				   wrMem(cpu.reg.SP--, cpu.reg.PC >> 8);
 				   wrMem(cpu.reg.SP--, (cpu.reg.PC & 0xFF) << 8);
-				   cpu.reg.PC = ((immWord & 0xFF) << 8) | (immWord >> 8);
+				   wrMem(cpu.reg.SP--, cpu.reg.PC >> 8);
+				   cpu.reg.PC = immWord;
 				   cycles = 12;
 				   size = 3;
 				   break;
@@ -228,9 +232,9 @@ void executeNextOp () {
 		case 0x77: wrMem(cpu.reg.HL, cpu.reg.A); cycles = 8; size = 1; break;
 
 		// Special LD/STORE
-		case 0xE0: wrMem(0xFF00 + immByte, cpu.reg.A); cycles = 12; size = 1; break;
+		case 0xE0: wrMem(0xFF00 + immByte, cpu.reg.A); cycles = 12; size = 2; break;
 		case 0xE2: wrMem(0xFF00 + cpu.reg.C, cpu.reg.A); cycles = 8; size = 1; break;
-		case 0xF0: cpu.reg.A = rdMem(0xFF00 + immByte); cycles = 12; size = 1; break;
+		case 0xF0: cpu.reg.A = rdMem(0xFF00 + immByte); cycles = 12; size = 2; break;
 		case 0xF2: cpu.reg.A = rdMem(0xFF00 + cpu.reg.C); cycles = 8; size = 1; break;
 
 		/* HHHHHHHHHHHHHHHHHHHHHH */
@@ -759,6 +763,89 @@ void executeNextOp () {
 		/* HHHHHHHHH */
 		case 0xCB: {
 					   switch (immByte) {
+						   // RL
+						   case 0x10: 
+							   		  cpu.reg.F &= ~ALL_FLAGS;
+									  cpu.reg.F |= (cpu.reg.B & (1 << 7)) >> 3;
+									  cpu.reg.B <<= 1;
+									  if (!cpu.reg.B)
+										  cpu.reg.F |= ZERO_FLAG;
+									  cycles = 8;
+									  size = 2;
+									  break;
+
+						   case 0x11: 
+							   		  cpu.reg.F &= ~ALL_FLAGS;
+									  cpu.reg.F |= (cpu.reg.C & (1 << 7)) >> 3;
+									  cpu.reg.C <<= 1;
+									  if (!cpu.reg.C)
+										  cpu.reg.F |= ZERO_FLAG;
+									  cycles = 8;
+									  size = 2;
+									  break;
+
+						   case 0x12: 
+							   		  cpu.reg.F &= ~ALL_FLAGS;
+									  cpu.reg.F |= (cpu.reg.D & (1 << 7)) >> 3;
+									  cpu.reg.D <<= 1;
+									  if (!cpu.reg.D)
+										  cpu.reg.F |= ZERO_FLAG;
+									  cycles = 8;
+									  size = 2;
+									  break;
+
+						   case 0x13: 
+							   		  cpu.reg.F &= ~ALL_FLAGS;
+									  cpu.reg.F |= (cpu.reg.E & (1 << 7)) >> 3;
+									  cpu.reg.E <<= 1;
+									  if (!cpu.reg.E)
+										  cpu.reg.F |= ZERO_FLAG;
+									  cycles = 8;
+									  size = 2;
+									  break;
+
+						   case 0x14: 
+							   		  cpu.reg.F &= ~ALL_FLAGS;
+									  cpu.reg.F |= (cpu.reg.H & (1 << 7)) >> 3;
+									  cpu.reg.H <<= 1;
+									  if (!cpu.reg.H)
+										  cpu.reg.F |= ZERO_FLAG;
+									  cycles = 8;
+									  size = 2;
+									  break;
+
+						   case 0x15: 
+							   		  cpu.reg.F &= ~ALL_FLAGS;
+									  cpu.reg.F |= (cpu.reg.L & (1 << 7)) >> 3;
+									  cpu.reg.L <<= 1;
+									  if (!cpu.reg.L)
+										  cpu.reg.F |= ZERO_FLAG;
+									  cycles = 8;
+									  size = 2;
+									  break;
+
+						   case 0x16: 
+							   		  cpu.reg.F &= ~ALL_FLAGS;
+									  memVal = rdMem(cpu.reg.HL);
+									  cpu.reg.F |= (memVal & (1 << 7)) >> 3;
+									  memVal <<= 1;
+									  if (!memVal)
+										  cpu.reg.F |= ZERO_FLAG;
+									  wrMem(cpu.reg.HL, memVal);
+									  cycles = 8;
+									  size = 2;
+									  break;
+
+						   case 0x17: 
+							   		  cpu.reg.F &= ~ALL_FLAGS;
+									  cpu.reg.F |= (cpu.reg.A & (1 << 7)) >> 3;
+									  cpu.reg.A <<= 1;
+									  if (!cpu.reg.A)
+										  cpu.reg.F |= ZERO_FLAG;
+									  cycles = 8;
+									  size = 2;
+									  break;
+
 						   case 0x30: 
 							   		  cpu.reg.F &= ~ALL_FLAGS;
 									  cpu.reg.B = ((cpu.reg.B & 0xF) << 4) | (cpu.reg.B >> 4);
@@ -829,385 +916,385 @@ void executeNextOp () {
 						   // BIT
 						   case 0x40:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.B & 0x1) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.B & (1 << 0)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x41:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.C & 0x1) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.C & (1 << 0)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x42:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.D & 0x1) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.D & (1 << 0)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x43:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.E & 0x1) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.E & (1 << 0)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x44:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.H & 0x1) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.H & (1 << 0)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x45:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.L & 0x1) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.L & (1 << 0)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x46:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & 0x1) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & (1 << 0)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x47:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.A & 0x1) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.A & (1 << 0)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x48:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.B & 0x2) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.B & (1 << 1)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x49:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.C & 0x2) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.C & (1 << 1)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x4A:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.D & 0x2) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.D & (1 << 1)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x4B:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.E & 0x2) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.E & (1 << 1)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x4C:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.H & 0x2) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.H & (1 << 1)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x4D:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.L & 0x2) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.L & (1 << 1)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x4E:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & 0x2) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & (1 << 1)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x4F:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.A & 0x2) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.A & (1 << 1)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x50:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.B & 0x3) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.B & (1 << 2)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x51:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.C & 0x3) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.C & (1 << 2)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x52:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.D & 0x3) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.D & (1 << 2)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x53:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.E & 0x3) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.E & (1 << 2)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x54:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.H & 0x3) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.H & (1 << 2)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x55:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.L & 0x3) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.L & (1 << 2)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x56:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & 0x3) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & (1 << 2)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x57:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.A & 0x3) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.A & (1 << 2)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x58:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.B & 0x4) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.B & (1 << 3)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x59:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.C & 0x4) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.C & (1 << 3)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x5A:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.D & 0x4) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.D & (1 << 3)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x5B:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.E & 0x4) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.E & (1 << 3)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x5C:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.H & 0x4) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.H & (1 << 3)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x5D:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.L & 0x4) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.L & (1 << 3)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x5E:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & 0x4) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & (1 << 3)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x5F:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.A & 0x4) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.A & (1 << 3)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x60:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.B & 0x5) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.B & (1 << 4)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x61:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.C & 0x5) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.C & (1 << 4)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x62:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.D & 0x5) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.D & (1 << 4)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x63:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.E & 0x5) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.E & (1 << 4)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x64:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.H & 0x5) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.H & (1 << 4)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x65:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.L & 0x5) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.L & (1 << 4)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x66:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & 0x5) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & (1 << 4)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x67:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.A & 0x5) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.A & (1 << 4)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x68:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.B & 0x6) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.B & (1 << 5)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x69:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.C & 0x6) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.C & (1 << 5)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x6A:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.D & 0x6) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.D & (1 << 5)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x6B:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.E & 0x6) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.E & (1 << 5)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x6C:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.H & 0x6) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.H & (1 << 5)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x6D:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.L & 0x6) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.L & (1 << 5)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x6E:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & 0x6) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & (1 << 5)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x6F:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.A & 0x6) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.A & (1 << 5)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x70:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.B & 0x7) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.B & (1 << 6)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x71:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.C & 0x7) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.C & (1 << 6)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x72:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.D & 0x7) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.D & (1 << 6)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x73:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.E & 0x7) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.E & (1 << 6)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x74:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.H & 0x7) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.H & (1 << 6)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x75:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.L & 0x7) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.L & (1 << 6)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x76:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & 0x7) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & (1 << 6)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x77:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.A & 0x7) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.A & (1 << 6)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x78:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.B & 0x8) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.B & (1 << 7)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x79:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.C & 0x8) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.C & (1 << 7)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x7A:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.D & 0x8) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.D & (1 << 7)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x7B:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.E & 0x8) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.E & (1 << 7)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x7C:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.H & 0x8) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.H & (1 << 7)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x7D:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.L & 0x8) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.L & (1 << 7)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x7E:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & 0x8) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(rdMem(cpu.reg.HL) & (1 << 7)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
 						   case 0x7F:
 									  cpu.reg.F &= ~(ZERO_FLAG | NEG_FLAG);
-									  cpu.reg.F |= (!(cpu.reg.A & 0x8) << 7) | HALFCARRY_FLAG;
+									  cpu.reg.F |= (!(cpu.reg.A & (1 << 7)) << 7) | HALFCARRY_FLAG;
 									  cycles = 8;
 									  size = 2;
 									  break;
@@ -1263,6 +1350,9 @@ void executeNextOp () {
 				   size = 1;
 				   break;
 
+		case 0xF3: cycles = 4; size = 1; break; // DI
+		case 0xFB: cycles = 4; size = 1; break; // EI
+
 		default:
 				   printf("Uninmplemented Opcode 0x%02x at 0x%04x\n", opcode, cpu.reg.PC);
 				   break;
@@ -1270,6 +1360,7 @@ void executeNextOp () {
 
 	// Update Program Counter
 	cpu.reg.PC += size;
+	vector_add(vec, &opcode);
 
 	// Timing
 	uSecs.QuadPart = 0;
